@@ -1,0 +1,73 @@
+name: Build to GH Pages
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+ 
+          - name: Windows 2019 (MSVC)
+            os: windows-2019
+            # TODO: Re-enable FFmpeg after licensing issues have been clarified
+            # Attention: If you change the cmake_args for the Windows CI build,
+            #            also adjust the for the local Windows build setup in
+            #            ./tools/windows_buildenv.bat
+            cmake_args: >-
+              -DBULK=OFF
+              -DFFMPEG=OFF
+              -DHSS1394=ON
+              -DLOCALECOMPARE=ON
+              -DMAD=ON
+              -DMEDIAFOUNDATION=ON
+              -DMODPLUG=ON
+              -DWAVPACK=ON
+            cc: cl
+            cxx: cl
+            # TODO: Fix these broken tests on Windows
+            ctest_args: --exclude-regex '^AutoDJProcessorTest.*$'
+            cpack_generator: WIX
+            compiler_cache: sccache
+            compiler_cache_path: C:\Users\runneradmin\AppData\Local\Mozilla\sccache\cache
+            buildenv_basepath: C:\buildenv
+            buildenv_script: tools/windows_buildenv.bat
+            artifacts_name: Windows Installer
+            artifacts_path: build/*.msi
+            artifacts_slug: windows-win64
+            qt_qpa_platform: windows
+
+    env:
+      SCCACHE_COMMIT: 3f318a8675e4c3de4f5e8ab2d086189f2ae5f5cf
+
+    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.name }}
+    container: ${{ matrix.container }}
+    outputs:
+      artifact-macos-macosintel: ${{ steps.prepare_deploy.outputs.artifact-macos-macosintel }}
+      artifact-windows-win64: ${{ steps.prepare_deploy.outputs.artifact-windows-win64 }}
+    steps:
+
+    # sccache's handling of the /fp:fast MSVC compiler option is broken, so use our fork with the fix.
+    # https://github.com/mozilla/sccache/issues/950
+    - name: Build
+      shell: bash
+      # TODO: change this to simply `cargo install sccache` after 0.2.16 has been released
+      run: cargo install --git https://github.com/mozilla/sccache.git --rev "${SCCACHE_COMMIT}"
+    - name: Check
+      shell: bash
+      run: |
+        echo Check says hello
+        set -x
+        find . -name 'sccache*'
+        echo ldd
+        find . -name sccache -or -name sccache.exe | while read f; do echo $f; ldd $f; done
+    - name: Deploy
+      uses: peaceiris/actions-gh-pages@v3
+      if: ${{ github.ref == 'refs/heads/main' }}
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./public
