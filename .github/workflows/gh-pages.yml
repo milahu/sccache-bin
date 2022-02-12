@@ -73,9 +73,9 @@ jobs:
       run: |
         echo Check says hello
         set -x
-        find . -name 'sccache*'
-        echo ldd
-        find . -name sccache -or -name sccache.exe | while read f; do echo $f; ldd $f; done
+        ls
+        find .
+        #find . -name sccache -or -name sccache.exe | while read f; do echo $f; ldd $f; done
     - name: Deploy
       uses: peaceiris/actions-gh-pages@v3
       if: ${{ github.ref == 'refs/heads/main' }}
