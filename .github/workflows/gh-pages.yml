@@ -68,6 +68,11 @@ jobs:
       uses: Swatinem/rust-cache@v1
       # https://github.com/Swatinem/rust-cache
       # has no effect?
+      # on commit 0f15266c1b4199719671a0d068935597fd37d07a
+      # Using keys:
+      #     v0-rust-build-1.58.1-x86_64-pc-windows-msvc-db9d1b20bba1-da39a3ee5e6b4b0d3255
+      #     v0-rust-build-1.58.1-x86_64-pc-windows-msvc-db9d1b20bba1
+      # No cache found.
 
 # not implemented
 # https://github.com/actions-rs/install/issues/10
@@ -90,16 +95,24 @@ jobs:
       run: |
         echo copy says hello
         set -x
-        pwd
+        pwd # /d/a/sccache-bin/sccache-bin
         #ls "C:\\Users\\runneradmin\\.cargo\\bin"
-        # assume: pwd == C:\Users\runneradmin
-        ls .cargo/bin
+        # wrong: # assume: pwd == C:\Users\runneradmin
+        #ls .cargo/bin # no such file
         mkdir public
         #cp "C:\\Users\\runneradmin\\.cargo\\bin\\sccache.exe" ./public/
-        cp .cargo/bin/sccache.exe ./public/
+        #cp .cargo/bin/sccache.exe ./public/ # no such file
+        ls /
+        ls /c
+        ls /c/Users
+        ls /c/Users/runneradmin
+        ls /c/Users/runneradmin/.cargo
+        ls /c/Users/runneradmin/.cargo/bin
+        cp /c/Users/runneradmin/.cargo/bin/sccache.exe ./public/
         stat ./public/sccache.exe
+        sha256sum ./public/sccache.exe >./public/sccache.exe.sha256
+        cat ./public/sccache.exe.sha256
         find .
-        #find . -name sccache.exe
     - name: Deploy
       uses: peaceiris/actions-gh-pages@v3
       if: ${{ github.ref == 'refs/heads/main' }}
