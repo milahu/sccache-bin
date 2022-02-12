@@ -51,6 +51,17 @@ jobs:
       artifact-windows-win64: ${{ steps.prepare_deploy.outputs.artifact-windows-win64 }}
     steps:
 
+    # selecting a toolchain either by action or manual `rustup` calls should happen
+    # before the plugin, as it uses the current rustc version as its cache key
+    - name: "install rust"
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: stable
+
+    - name: "setup rust cache"
+      uses: Swatinem/rust-cache@v1
+
     # sccache's handling of the /fp:fast MSVC compiler option is broken, so use our fork with the fix.
     # https://github.com/mozilla/sccache/issues/950
     - name: Build
