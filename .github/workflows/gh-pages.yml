@@ -62,20 +62,37 @@ jobs:
     - name: "setup rust cache"
       uses: Swatinem/rust-cache@v1
 
+# not implemented
+# xxxx
+#    - name: "build with actions-rs/install"
+#      uses: actions-rs/install@v0.1
+#      with:
+#        crate: --git https://github.com/mozilla/sccache.git --rev "${SCCACHE_COMMIT}"
+#        version: latest
+#        use-tool-cache: true
+
+
     # sccache's handling of the /fp:fast MSVC compiler option is broken, so use our fork with the fix.
     # https://github.com/mozilla/sccache/issues/950
     - name: Build
       shell: bash
       # TODO: change this to simply `cargo install sccache` after 0.2.16 has been released
       run: cargo install --git https://github.com/mozilla/sccache.git --rev "${SCCACHE_COMMIT}"
-    - name: Check
+    - name: Copy
       shell: bash
       run: |
-        echo Check says hello
+        echo copy says hello
         set -x
-        ls
+        pwd
+        #ls "C:\\Users\\runneradmin\\.cargo\\bin"
+        # assume: pwd == C:\Users\runneradmin
+        ls .cargo/bin
+        mkdir public
+        #cp "C:\\Users\\runneradmin\\.cargo\\bin\\sccache.exe" ./public/
+        cp .cargo/bin/sccache.exe ./public/
+        stat ./public/sccache.exe
         find .
-        #find . -name sccache -or -name sccache.exe | while read f; do echo $f; ldd $f; done
+        #find . -name sccache.exe
     - name: Deploy
       uses: peaceiris/actions-gh-pages@v3
       if: ${{ github.ref == 'refs/heads/main' }}
